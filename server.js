@@ -1,34 +1,59 @@
 const express = require('express')
-const app = express()
 const uid = require('uid')
 
-let cards = [
-  { title: 'basics', content: 'bar', tags: 'css, html, js', id: uid() },
-  { title: 'misc', content: 'foo', tags: 'css, js', id: uid() },
-]
+const app = express()
 
 app.use(express.json())
 
-app.post('/cards', (req, res) => {
-  let newCardData = req.body
-  const uniqueId = uid()
-  newCardData = { ...newCardData, id: uniqueId }
-  const newCards = [...cards, newCardData]
-  res.json(newCards)
-})
+const data = {
+  cards: [
+    {
+      title: 'Express',
+      content: 'Express is easy',
+      tags: ['js', 'node', 'backend'],
+      id: uid(),
+    },
+    {
+      title: 'Display: grid',
+      content: 'Declare a grid without Bootstrap',
+      tags: ['css', 'grid', 'layout'],
+      id: uid(),
+    },
+  ],
+}
 
 app.get('/cards', (req, res) => {
-  res.json(cards)
+  res.json(data.cards)
+})
+
+app.post('/cards', (req, res) => {
+  const newCard = req.body
+  newCard.id = uid()
+  data.cards.push(newCard)
+  res.json(newCard)
 })
 
 app.delete('/cards/:id', (req, res) => {
-  const itemId = req.params.id
-  const indexOfDeleteItem = cards.findIndex(item => item.id === itemId)
-  cards = [
-    ...cards.slice(0, indexOfDeleteItem),
-    ...cards.slice(indexOfDeleteItem + 1),
-  ]
-  res.json(cards)
+  const id = req.params.id
+  const deletedCard = data.cards.find(card => card.id === id)
+  data.cards = data.cards.filter(card => card.id !== id)
+  res.json(deletedCard)
+})
+
+app.patch('/cards/:id', (req, res) => {
+  const id = req.params.id
+  const index = data.cards.findIndex(card => card.id === id)
+  const card = { ...data.cards[index], ...req.body }
+  data.cards[index] = card
+  res.json(card)
+})
+
+app.put('/cards/:id', (req, res) => {
+  const id = req.params.id
+  const index = data.cards.findIndex(card => card.id === id)
+  const card = { ...req.body, id }
+  data.cards[index] = card
+  res.json(card)
 })
 
 app.listen(process.env.PORT || 3000, () => {
